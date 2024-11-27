@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+    ],
+    "settings": {
+        "files.associations": {
+            "bl_typedefs.h": "c",
+            "bl_memory_cfg.h": "c"
+        }
+    }
+}

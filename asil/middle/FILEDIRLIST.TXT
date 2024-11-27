@@ -1,0 +1,9 @@
+M:\git_data_lan\mingyea\mass_production\775_code_develop_board\fmsh\code\code_boot_org\asil\middle\autosar_bl
+M:\git_data_lan\mingyea\mass_production\775_code_develop_board\fmsh\code\code_boot_org\asil\middle\autosar_bl\cfg
+M:\git_data_lan\mingyea\mass_production\775_code_develop_board\fmsh\code\code_boot_org\asil\middle\autosar_bl\inc
+M:\git_data_lan\mingyea\mass_production\775_code_develop_board\fmsh\code\code_boot_org\asil\middle\autosar_bl\sources
+M:\git_data_lan\mingyea\mass_production\775_code_develop_board\fmsh\code\code_boot_org\asil\middle\autosar_bl\sources\base
+M:\git_data_lan\mingyea\mass_production\775_code_develop_board\fmsh\code\code_boot_org\asil\middle\autosar_bl\sources\cfg
+M:\git_data_lan\mingyea\mass_production\775_code_develop_board\fmsh\code\code_boot_org\asil\middle\autosar_bl\sources\driver
+M:\git_data_lan\mingyea\mass_production\775_code_develop_board\fmsh\code\code_boot_org\asil\middle\autosar_bl\sources\spec
+M:\git_data_lan\mingyea\mass_production\775_code_develop_board\fmsh\code\code_boot_org\asil\middle\autosar_bl\sources\types

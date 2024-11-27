@@ -1,0 +1,363 @@
+﻿/**
+ * @copyright: KUWE technologies Co.,Ltd. 2013-2015. all rights reserved.
+ * @file: calibration.h
+ * @brief: This file contains all the functions prototypes for calibration.
+ * @author: 
+ * @version: V1.0.0
+ * @date: 2013-07-24
+ * @history:
+ *      1.
+ *	author:
+ *	version:
+ *	date:
+ *	modification:
+ */
+
+#ifndef __CALIBRATION_H
+#define __CALIBRATION_H
+
+#include "common_types.h"
+#include "nvm.h"
+#include "boot_app_cfg.h"
+#include "Cpu.h"
+
+#define  CAL_CPU_SR_ALLOC()   CPU_CCR_ALLOC()
+#define  CAL_ENTER_CRITICAL() ENTER_CRITICAL()
+#define  CAL_EXIT_CRITICAL()  EXIT_CRITICAL()
+
+#if 0
+typedef enum
+{
+	DID_TYPE_CONST = 0u,
+	DID_TYPE_VOLATILE
+}did_type_t;
+#else
+typedef u8 did_type_t;
+#define DID_TYPE_CONST 0u
+#define DID_TYPE_VOLATILE 1u
+#endif
+
+#if 0
+typedef enum
+{
+	READ_ONLY = 0u,
+	WRITE_ONLY,
+	READ_AND_WRITE,
+}r_w_type_t;
+#else
+typedef u8 r_w_type_t;
+#define READ_ONLY 0u
+#define WRITE_ONLY 1u
+#define READ_AND_WRITE 2u
+#endif
+
+typedef uint16_t did_t;
+
+typedef struct
+{
+	did_t id;
+	did_type_t type;
+	r_w_type_t rw;
+	//uint8_t *addr;
+	uint32_t phy_addr;
+	uint8_t length;
+}did_attribute_t;
+
+
+/**********这些地址是从，BOOT区复制而来*********/
+
+#define SYSDID_F180_ADDR BOOT_CALIBRATION_START_ADDR
+#define SYSDID_F180_LEN 14u
+#define SYSDID_F180_CK_LEN (SYSDID_F180_LEN+1u)   //留一字节做为校验
+extern const u8 g_sysdid_f180[SYSDID_F180_CK_LEN]  ;
+
+#define SYSDID_F181_ADDR (SYSDID_F180_ADDR+SYSDID_F180_CK_LEN)
+#define SYSDID_F181_LEN 15u
+#define SYSDID_F181_CK_LEN (SYSDID_F181_LEN+1u)   //留一字节做为校验
+extern const u8 g_sysdid_f181[SYSDID_F181_CK_LEN]  ;
+
+#if 0
+#define SYSDID_F182_ADDR (SYSDID_F181_ADDR+SYSDID_F181_CK_LEN)
+#define SYSDID_F182_LEN 14
+#define SYSDID_F182_CK_LEN (SYSDID_F182_LEN+1)   //留一字节做为校验
+
+#define SYSDID_F19E_ADDR (SYSDID_F182_ADDR+SYSDID_F182_CK_LEN)
+#define SYSDID_F19E_LEN 14
+#define SYSDID_F19E_CK_LEN (SYSDID_F19E_LEN+1)   //留一字节做为校验
+#endif
+
+
+#define SYSDID_F1F2_ADDR (SYSDID_F181_ADDR+SYSDID_F181_CK_LEN)
+#define SYSDID_F1F2_LEN 14u
+#define SYSDID_F1F2_CK_LEN (SYSDID_F1F2_LEN+1u)   //留一字节做为校验
+
+
+/*********这些是app区定义的***目前用了 151字节**********/
+#define SYSDID_RD_START_ADDR APP_CALIBRATION_START_ADDR  //
+#define SYSDID_F182_ADDR SYSDID_RD_START_ADDR
+#define SYSDID_F182_LEN 14u
+#define SYSDID_F182_CK_LEN (SYSDID_F182_LEN+1u)   //留一字节做为校验
+
+//extern const u8 g_sysdid_f182[SYSDID_F182_CK_LEN] ;
+
+#define SYSDID_F187_ADDR (SYSDID_F182_ADDR+SYSDID_F182_CK_LEN)
+#define SYSDID_F187_LEN 14u
+#define SYSDID_F187_CK_LEN (SYSDID_F187_LEN+1u)   //留一字节做为校验
+
+//extern const u8 g_sysdid_f187[SYSDID_F187_CK_LEN]  ;
+
+
+#define SYSDID_F188_ADDR (SYSDID_F187_ADDR+SYSDID_F187_CK_LEN)
+#define SYSDID_F188_LEN 14u
+#define SYSDID_F188_CK_LEN (SYSDID_F188_LEN+1u)   //留一字节做为校验
+
+//extern const u8 g_sysdid_f188[SYSDID_F188_CK_LEN]  ;
+
+
+#define SYSDID_F18A_ADDR (SYSDID_F188_ADDR+SYSDID_F188_CK_LEN)
+#define SYSDID_F18A_LEN 6u
+#define SYSDID_F18A_CK_LEN (SYSDID_F18A_LEN+1u)   //留一字节做为校验
+
+//extern const u8 g_sysdid_f18a[SYSDID_F18A_CK_LEN]  ;
+
+#define SYSDID_F18B_ADDR (SYSDID_F18A_ADDR+SYSDID_F18A_CK_LEN)
+#define SYSDID_F18B_LEN 4u
+#define SYSDID_F18B_CK_LEN (SYSDID_F18B_LEN+1u)   //留一字节做为校验
+
+//extern const u8 g_sysdid_f18b[SYSDID_F18B_CK_LEN]  ;
+
+#define SYSDID_F18C_ADDR (SYSDID_F18B_ADDR+SYSDID_F18B_CK_LEN)
+#define SYSDID_F18C_LEN 15u
+#define SYSDID_F18C_CK_LEN (SYSDID_F18C_LEN+1u)   //留一字节做为校验
+
+//extern const u8 g_sysdid_f18c[SYSDID_F18C_CK_LEN]  ;
+
+#define SYSDID_F191_ADDR (SYSDID_F18C_ADDR+SYSDID_F18C_CK_LEN)
+#define SYSDID_F191_LEN 14u
+#define SYSDID_F191_CK_LEN (SYSDID_F191_LEN+1u)   //留一字节做为校验
+
+//extern const u8 g_sysdid_f191[SYSDID_F191_CK_LEN]  ;
+
+#define SYSDID_F192_ADDR (SYSDID_F191_ADDR+SYSDID_F191_CK_LEN)
+#define SYSDID_F192_LEN 15u
+#define SYSDID_F192_CK_LEN (SYSDID_F192_LEN+1u)   //留一字节做为校验
+
+//extern const u8 g_sysdid_f192[SYSDID_F192_CK_LEN]  ;
+
+#define SYSDID_F193_ADDR (SYSDID_F192_ADDR+SYSDID_F192_CK_LEN)
+#define SYSDID_F193_LEN 14u
+#define SYSDID_F193_CK_LEN (SYSDID_F193_LEN+1u)   //留一字节做为校验
+
+//extern const u8 g_sysdid_f193[SYSDID_F193_CK_LEN]  ;
+
+#define SYSDID_F194_ADDR (SYSDID_F193_ADDR+SYSDID_F193_CK_LEN)
+#define SYSDID_F194_LEN 15u
+#define SYSDID_F194_CK_LEN (SYSDID_F194_LEN+1u)   //留一字节做为校验
+
+//extern const u8 g_sysdid_f194[SYSDID_F194_CK_LEN]  ;
+
+
+#define SYSDID_F195_ADDR (SYSDID_F194_ADDR+SYSDID_F194_CK_LEN)
+#define SYSDID_F195_LEN 14u
+#define SYSDID_F195_CK_LEN (SYSDID_F195_LEN+1u)   //留一字节做为校验
+
+//extern const u8 g_sysdid_f195[SYSDID_F195_CK_LEN]  ;
+
+#define SYSDID_F196_ADDR (SYSDID_F195_ADDR+SYSDID_F195_CK_LEN)
+#define SYSDID_F196_LEN 14u
+#define SYSDID_F196_CK_LEN (SYSDID_F196_LEN+1u)   //留一字节做为校验
+
+//extern const u8 g_sysdid_f196[SYSDID_F196_CK_LEN]  ;
+
+#define SYSDID_F1F1_ADDR (SYSDID_F196_ADDR+SYSDID_F196_CK_LEN)
+#define SYSDID_F1F1_LEN 14u
+#define SYSDID_F1F1_CK_LEN (SYSDID_F1F1_LEN+1u)   //留一字节做为校验
+
+//extern const u8 g_sysdid_f1f1[SYSDID_F1F1_CK_LEN]  ;
+
+
+#define SYSDID_F19E_ADDR (SYSDID_F1F1_ADDR+SYSDID_F1F1_CK_LEN)
+#define SYSDID_F19E_LEN 14u
+#define SYSDID_F19E_CK_LEN (SYSDID_F19E_LEN+1u)   //留一字节做为校验
+//extern const u8 g_sysdid_f19e[SYSDID_F19E_CK_LEN]  ;
+
+
+#define DTC_LOSS_RECOVER_TIMES_ADDR (SYSDID_F19E_ADDR+SYSDID_F19E_CK_LEN)
+#define DTC_LOSS_RECOVER_TIMES_LEN 4u
+#define DTC_LOSS_RECOVER_TIMES_CK_LEN (DTC_LOSS_RECOVER_TIMES_LEN+1u)   //留一字节做为校验
+#define DTC_LOSS_RECOVER_TIMES_ID 0u
+#define DTC_CHECKSUM_ERROR_TIMES_ID 1u
+#define DTC_ROLLINGCOUNT_ERROR_TIMES_ID 2u
+#define DTC_ROLLINGCOUNT_OFFSET_ID 3u
+//extern const u8 g_dtc_loss_recover_times[DTC_LOSS_RECOVER_TIMES_CK_LEN]  ;
+
+#if 0
+#define E2E_DATA_ID_ADDR (DTC_LOSS_RECOVER_TIMES_ADDR+DTC_LOSS_RECOVER_TIMES_CK_LEN)
+#define E2E_DATA_ID_U16_LEN (4u)
+#define E2E_DATA_ID_U16_CK_LEN (E2E_DATA_ID_U16_LEN+1u)
+#define E2E_DATA_ID_U8_LEN (E2E_DATA_ID_U16_LEN*2u)
+#define E2E_DATA_ID_CK_U8_LEN (E2E_DATA_ID_U8_LEN+2u)
+#define E2E_DATA_ID_SWS_LEFT_ID 0u
+#define E2E_DATA_ID_SWS_RIGHT_ID 1u
+#define E2E_DATA_ID_BCM_STATE_ID 2u
+#define E2E_DATA_ID_ADAS_ID 3u
+extern const u16 g_data_id_cfg[E2E_DATA_ID_U16_CK_LEN] @E2E_DATA_ID_ADDR;
+#define KEY_TIME_CFG_ADDR (E2E_DATA_ID_ADDR+E2E_DATA_ID_CK_U8_LEN)
+#define KEY_TIME_CFG_U16_LEN  9u
+#define KEY_TIME_CFG_U16_CK_LEN  (KEY_TIME_CFG_U16_LEN+1u)
+#define KEY_TIME_CFG_U8_LEN  (KEY_TIME_CFG_U16_LEN*2u)
+#define KEY_TIME_CFG_U8_CK_LEN  (KEY_TIME_CFG_U8_LEN+2u)
+#define KEY_TIME_CFG_IO_DEBOUNCE_ID  0u
+#define KEY_TIME_CFG_IO_STUCK_ID  1u
+#define KEY_TIME_CFG_IO_FAULT_ID  2u
+#define KEY_TIME_CFG_AD_DEBOUNCE_ID  3u
+#define KEY_TIME_CFG_AD_STUCK_ID  4u
+#define KEY_TIME_CFG_AD_FAULT_ID  5u
+#define KEY_TIME_CFG_ASIL_DEBOUNCE_ID  6u
+#define KEY_TIME_CFG_ASIL_STUCK_ID  7u
+#define KEY_TIME_CFG_ASIL_FAULT_ID  8u
+extern const u16 g_key_cfg_times[KEY_TIME_CFG_U16_CK_LEN] @KEY_TIME_CFG_ADDR;
+#define CFG_SUPPLY_INFO_ADDR (E2E_DATA_ID_ADDR+E2E_DATA_ID_CK_U8_LEN)
+#define CFG_SUPPLY_INFO_LEN  (1u)
+#define CFG_SUPPLY_INFO_ID_WITE_01A0  (0u)
+#define CFG_SUPPLY_INFO_CK_LEN  (CFG_SUPPLY_INFO_LEN+1u)
+extern const u8 g_cfg_supply_info[CFG_SUPPLY_INFO_CK_LEN]@CFG_SUPPLY_INFO_ADDR ;
+
+
+#define CFG_SPEED_LIMIT_ADDR (CFG_SUPPLY_INFO_ADDR+CFG_SUPPLY_INFO_CK_LEN)
+#define CFG_SPEED_LIMIT_LEN  (1u)
+#define CFG_SPEED_LIMIT_CK_LEN  (CFG_SPEED_LIMIT_LEN+1u)
+extern const u8 g_cfg_speed_limit[CFG_SPEED_LIMIT_CK_LEN] @CFG_SPEED_LIMIT_ADDR;
+#endif
+
+/*********这些是EEPROM定义的*************/
+#define SYSDID_WR_START_ADDR 0u  //逻辑地址，从0开始，内部实际映射到 EEPROM_RAM_ADDR_START
+
+#define SYSDID_ATTEMP_ADDR (SYSDID_WR_START_ADDR+0x10u)
+#define SYSDID_ATTEMP_LEN 2u
+
+#define SYSDID_ATTEMP_MAX_ADDR (SYSDID_WR_START_ADDR+0x12u)
+#define SYSDID_ATTEMP_MAX_LEN 2u
+
+#define SYSDID_ATTEMP_CRC_ADDR (SYSDID_WR_START_ADDR+0x14u)
+#define SYSDID_ATTEMP_CRC_LEN  1u
+
+#define SYSDID_ATTEMP_CK_LEN  5u
+#define SYSDID_ECU_SN_ADDR (SYSDID_WR_START_ADDR+0x16u)
+#define SYSDID_ECU_SN_LEN 15u
+#define SYSDID_ECU_SN_CK_LEN (SYSDID_ECU_SN_LEN+1u)
+
+#define SYSDID_F190_VIN_ADDR (SYSDID_WR_START_ADDR+0x26u)
+#define SYSDID_F190_VIN_LEN 17u
+#define SYSDID_F190_VIN_CK_LEN (SYSDID_F190_VIN_LEN+1u)   //留一字节做为校验
+
+#define SYSDID_F198_REPAIR_SN_ADDR (SYSDID_WR_START_ADDR+0x3Au)
+#define SYSDID_F198_REPAIR_SN_LEN 20u
+#define SYSDID_F198_REPAIR_SN_CK_LEN (SYSDID_F198_REPAIR_SN_LEN+1u)   //留一字节做为校验
+
+#define SYSDID_F199_DATE_ADDR (SYSDID_WR_START_ADDR+0x4Eu)
+#define SYSDID_F199_DATE_LEN 4u
+#define SYSDID_F199_DATE_CK_LEN (SYSDID_F199_DATE_LEN+1u)   //留一字节做为校验
+
+#define SYSDID_MANUFAC_LIFECYCLE_COUNT_ADDR (SYSDID_WR_START_ADDR+0x54u)
+#define SYSDID_MANUFAC_LIFECYCLE_COUNT_LEN 1u
+#define SYSDID_MANUFAC_LIFECYCLE_COUNT_CK_LEN (SYSDID_MANUFAC_LIFECYCLE_COUNT_LEN+1u)
+
+#define SYSDID_SECURITY_KEY_ADDR (SYSDID_WR_START_ADDR+0x56u)
+#define SYSDID_SECURITY_KEY_LEN 16u
+#define SYSDID_SECURITY_KEY_CK_LEN (SYSDID_SECURITY_KEY_LEN+1u)   //留一字节做为校验
+
+#define SYSDID_SA_LOCKTIMER_TIME_ADDR (SYSDID_WR_START_ADDR+0x66u)
+#define SYSDID_SA_LOCKTIMER_TIME_LEN 2u
+
+#define SYSDID_SA_LOCKTIMER_FLAG_ADDR (SYSDID_WR_START_ADDR+0x68u)
+#define SYSDID_SA_LOCKTIMER_FLAG_LEN 1u
+
+#define SYSDID_SA_LV1_ATTEMPT_ADDR (SYSDID_WR_START_ADDR+0x6Au)
+#define SYSDID_SA_LV1_ATTEMPT_LEN 1u
+
+#define SYSDID_SA_LC_CRC_ADDR (SYSDID_WR_START_ADDR+0x6Cu)
+#define SYSDID_SA_LC_CRC_LEN 1u
+
+#define SYSDID_SA_LOCKTIMER_LEN 4u
+#define SYSDID_SA_LOCKTIMER_CK_LEN (SYSDID_SA_LOCKTIMER_LEN+1u)
+
+//供应商会话相关的安全访问
+#define SYSDID_SU_LOCKTIMER_TIME_ADDR (SYSDID_WR_START_ADDR+0x70u)
+#define SYSDID_SU_LOCKTIMER_TIME_LEN 2u
+
+#define SYSDID_SU_LOCKTIMER_FLAG_ADDR (SYSDID_WR_START_ADDR+0x72u)
+#define SYSDID_SU_LOCKTIMER_FLAG_LEN 1u
+
+#define SYSDID_SU_LV1_ATTEMPT_ADDR (SYSDID_WR_START_ADDR+0x74u)
+#define SYSDID_SU_LV1_ATTEMPT_LEN 1u
+
+#define SYSDID_SU_LC_CRC_ADDR (SYSDID_WR_START_ADDR+0x76u)
+#define SYSDID_SU_LC_CRC_LEN 1u
+
+#define SYSDID_SU_LOCKTIMER_LEN 4u
+#define SYSDID_SU_LOCKTIMER_CK_LEN (SYSDID_SU_LOCKTIMER_LEN+1u)
+
+//VehicleConfiguration
+#define SYSDID_VEHICLE_CONFIG_ADDR (SYSDID_WR_START_ADDR+0x7Au)
+#define SYSDID_VEHICLE_CONFIG_LEN 1u
+#define SYSDID_VEHICLE_CONFIG_CK_LEN (SYSDID_VEHICLE_CONFIG_LEN+1u)
+
+#define SYSDID_SW_VERSION_FOR_SG_ADDR (SYSDID_WR_START_ADDR+0x7Cu)
+#define SYSDID_SW_VERSION_FOR_SG_LEN 4u
+#define SYSDID_SW_VERSION_FOR_SG_CK_LEN (SYSDID_SW_VERSION_FOR_SG_LEN+1u)   //留一字节做为校验
+
+#define SYSDID_RES1_ADDR (SYSDID_WR_START_ADDR+0x80u)
+#define SYSDID_RES1_LEN 4u
+#define SYSDID_RES1_CK_LEN (SYSDID_RES1_LEN+1u)   //留一字节做为校验
+
+#define SYSDID_RES2_ADDR (SYSDID_WR_START_ADDR+0x84u)
+#define SYSDID_RES2_LEN 4u
+#define SYSDID_RES2_CK_LEN (SYSDID_RES2_LEN+1u)   //留一字节做为校验
+
+#define SYSDID_RES3_ADDR (SYSDID_WR_START_ADDR+0x88u)
+#define SYSDID_RES3_LEN 4u
+#define SYSDID_RES3_CK_LEN (SYSDID_RES3_LEN+1u)   //留一字节做为校验
+
+#define SYSDID_RES4_ADDR (SYSDID_WR_START_ADDR+0x8Cu)
+#define SYSDID_RES4_LEN 16u
+#define SYSDID_RES4_CK_LEN (SYSDID_RES4_LEN+1u)   //留一字节做为校验
+
+#define SYSDID_RES5_ADDR (SYSDID_WR_START_ADDR+0x9Cu)
+#define SYSDID_RES5_LEN 16u
+#define SYSDID_RES5_CK_LEN (SYSDID_RES5_LEN+1u)   //留一字节做为校验
+
+#define SYSDID_RES6_ADDR (SYSDID_WR_START_ADDR+0xACu)
+#define SYSDID_RES6_LEN 16u
+#define SYSDID_RES6_CK_LEN (SYSDID_RES6_LEN+1u)   //留一字节做为校验
+
+#define SYSDID_SA_TOTAL_TIMEOUT_ADDR (SYSDID_WR_START_ADDR+0xBCu)
+#define SYSDID_SA_TOTAL_TIMEOUT_LEN 3u
+#define SYSDID_SA_TOTAL_TIMEOUT_CK_LEN (SYSDID_SA_TOTAL_TIMEOUT_LEN+1u)   //留一字节做为校验
+
+#define SYSDID_SU_TOTAL_TIMEOUT_ADDR (SYSDID_WR_START_ADDR+0xC0u)
+
+#define SYSDID_SU_TOTAL_TIMEOUT_LEN 3u
+#define SYSDID_SU_TOTAL_TIMEOUT_CK_LEN (SYSDID_SU_TOTAL_TIMEOUT_LEN+1u)   //留一字节做为校验
+
+#define NVM_BASE_ADDR_DID  0u //NVM_START_ADDR_DID
+
+
+#define DID_ATTRIBUTE_TABLE_LENGTH 24u
+
+#define  EEPROM_LOGIC_BASE_ADDR_FOR_DTC (SYSDID_WR_START_ADDR+0x100)
+
+
+u8 cal_read_did(did_t did, uint8_t *p_buf, uint8_t length);
+
+u8 cal_write_did(did_t did, const uint8_t *p_buf, uint8_t length);
+
+extern void cal_did_init(void);
+
+void cal_did_read_refresh(void);
+
+u8 buf_judge_value_is_same(uc8 *pdata,u8 len ,u8 value);
+
+
+
+#endif /* __PEPSCALIBRATION_H */
