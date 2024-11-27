@@ -1909,9 +1909,12 @@ bl_ResponseCode_t Adpt_UdsCallBackWrite_Tester_Serial_Number(bl_BufferSize_t siz
     uint8_t i;
     IWDT_CNT_test = 0;
     IWDT_CNT_test1 = 0;
-    if (necessary_condition_count) { //写入工具序列号
-        resCode = DCM_E_CONDITIONSNOTCORRECT;
-    } else {
+    
+    do {
+        if (necessary_condition_count != 2) { //6001未通过
+            resCode = DCM_E_CONDITIONSNOTCORRECT;
+            break;
+        }
         FL_BSTIM16_GenerateUpdateEvent(BSTIM16);
         /*IWDT_CNT_test验证BSTIM16更新后是否清0*/
         IWDT_CNT_test = FL_BSTIM16_ReadCounter(BSTIM16);
@@ -1930,13 +1933,18 @@ bl_ResponseCode_t Adpt_UdsCallBackWrite_Tester_Serial_Number(bl_BufferSize_t siz
             data |= buffer[i * 4];
             EE_WriteVariable(TESTER_SERIAL_NUMBER_EE_FLASH_ADDRESS_0 + i, data);
         }
+        //可以在这里加上一个读EE的判断语句
         /*写EE16字节，13us*/
         IWDT_CNT_test1 = FL_BSTIM16_ReadCounter(BSTIM16);
         #endif
         Rte_SetDownStatus(&g_DownContext, RTE_SYSFLAG_WRITE_FINGPRINT); //ID = 0
         *respSize = 0u;
         resCode = DCM_E_POSITIVERESPONSE;
+    } while (0);
+    if (resCode == DCM_E_POSITIVERESPONSE) {
+        necessary_condition_count = 3; //F198通过
     }
+    
     return resCode;
 }
 
@@ -1950,9 +1958,12 @@ bl_ResponseCode_t Adpt_UdsCallBackWriteProgrammingDate(bl_BufferSize_t size,
     uint8_t i;
     IWDT_CNT_test = 0;
     IWDT_CNT_test1 = 0;
-    if (necessary_condition_count) { //写入编程日期
-        resCode = DCM_E_CONDITIONSNOTCORRECT;
-    } else {
+    
+    do {
+        if (necessary_condition_count != 3) { //F198未通过
+            resCode = DCM_E_CONDITIONSNOTCORRECT;
+            break;
+        }
         FL_BSTIM16_GenerateUpdateEvent(BSTIM16);
         IWDT_CNT_test = FL_BSTIM16_ReadCounter(BSTIM16);
         /*write PGM date TO RAM  */
@@ -1978,6 +1989,9 @@ bl_ResponseCode_t Adpt_UdsCallBackWriteProgrammingDate(bl_BufferSize_t size,
         Rte_SetDownStatus(&g_DownContext, RTE_SYSFLAG_WRITE_OTHER);
         *respSize = 0u;
         resCode = DCM_E_POSITIVERESPONSE;
+    } while (0);
+    if (resCode == DCM_E_POSITIVERESPONSE) {
+        necessary_condition_count = 4; //F199通过
     }
     return resCode;
 }
@@ -2011,56 +2025,63 @@ bl_ResponseCode_t Adpt_UdsCallbackCheckProgramCond(bl_BufferSize_t size,
     bl_DownContext_t raw_dct = g_DownContext;
     bl_Buffer_t *value;
     ret = BL_ERR_OK;
-    gs_UdsPrivateData.serviceId = ADPT_UDS_31_SERVICE_ID;
-    _Adpt_TimeOutCallBack(ADPT_UDS_31_SERVICE_ID);
-    for (i = 0; i < 8; i++) {
-        sha256_result[i * 4 + 0] = (bl_u8_t)((hash_buff[i] & 0xff000000u) >> 24); //高字节
-        sha256_result[i * 4 + 1] = (bl_u8_t)((hash_buff[i] & 0x00ff0000u) >> 16);
-        sha256_result[i * 4 + 2] = (bl_u8_t)((hash_buff[i] & 0x0000ff00u) >> 8);
-        sha256_result[i * 4 + 3] = (bl_u8_t)((hash_buff[i] & 0x000000ffu));       //低字节
-    }
-    for (i = 0; i < 32; i++) {
-        if (sha256_result[i] != recv_data_6000[i]) {
-            ret = BL_ERR_USER_CODE_01;
+    do {
+        if (necessary_condition_count != 8) { //36下载app未通过
+            resCode = DCM_E_CONDITIONSNOTCORRECT;
             break;
         }
-    }
-    if (BL_ERR_OK == ret) {
-        raw_dct.segment.segList[0].size -= 4;
-        value = (bl_Buffer_t *)(raw_dct.segment.segList[0].address + raw_dct.segment.segList[0].size);
-        ret = Adpt_VerifyData(&g_DownContext, (bl_Size_t)4, value);
-        if (ret != BL_ERR_OK) {
-            ret = BL_ERR_USER_CODE_02;
+        gs_UdsPrivateData.serviceId = ADPT_UDS_31_SERVICE_ID;
+        _Adpt_TimeOutCallBack(ADPT_UDS_31_SERVICE_ID);
+        for (i = 0; i < 8; i++) {
+            sha256_result[i * 4 + 0] = (bl_u8_t)((hash_buff[i] & 0xff000000u) >> 24); //高字节
+            sha256_result[i * 4 + 1] = (bl_u8_t)((hash_buff[i] & 0x00ff0000u) >> 16);
+            sha256_result[i * 4 + 2] = (bl_u8_t)((hash_buff[i] & 0x0000ff00u) >> 8);
+            sha256_result[i * 4 + 3] = (bl_u8_t)((hash_buff[i] & 0x000000ffu));       //低字节
         }
-    }
-    //ret = BL_ERR_OK; //240826 客户沟通，暂时先过
-    if (BL_ERR_OK == ret) {
-        buffer[0] = 0x4; //例程成功
-        g_LogicalBlockList.lbList[0].status[0] = (LBM_STATUS_UPDATED);
-        //app 烧写成功
-        Dm_WriteDefaultData(BOOTM_RESET_FLAG_DID);
+        for (i = 0; i < 32; i++) {
+            if (sha256_result[i] != recv_data_6000[i]) {
+                ret = BL_ERR_USER_CODE_01;
+                break;
+            }
+        }
         if (BL_ERR_OK == ret) {
-        
+            raw_dct.segment.segList[0].size -= 4;
+            value = (bl_Buffer_t *)(raw_dct.segment.segList[0].address + raw_dct.segment.segList[0].size);
+            ret = Adpt_VerifyData(&g_DownContext, (bl_Size_t)4, value);
+            if (ret != BL_ERR_OK) {
+                ret = BL_ERR_USER_CODE_02;
+            }
+        }
+        //ret = BL_ERR_OK; //240826 客户沟通，暂时先过
+        if (BL_ERR_OK == ret) {
+            buffer[0] = 0x4; //例程成功
+            g_LogicalBlockList.lbList[0].status[0] = (LBM_STATUS_UPDATED);
+            //app 烧写成功
+            Dm_WriteDefaultData(BOOTM_RESET_FLAG_DID);
+            necessary_condition_count = 9; //0203通过
+            if (BL_ERR_OK == ret) {
+            
+            } else {
+                buffer[0] = 0x6; //例程失败
+            }
         } else {
-            buffer[0] = 0x6; //例程失败
+            if (BL_ERR_USER_CODE_01 == ret) {
+                buffer[0] = 0x5;
+            } else if (BL_ERR_USER_CODE_02 == ret) {
+                buffer[0] = 0x6;
+            } else {
+            }
+            Rte_ClearDownStatus(&g_DownContext, ADPT_UDS_STATUS_MASK);
+            for (i = 0; i < Security_flash_failure_EE_FLASH_SIZE; i ++) {
+                data = 2;
+                EE_WriteVariable(Security_flash_failure_EE_FLASH_ADDRESS_0 + i, data);
+            }
         }
-    } else {
-        if (BL_ERR_USER_CODE_01 == ret) {
-            buffer[0] = 0x5;
-        } else if (BL_ERR_USER_CODE_02 == ret) {
-            buffer[0] = 0x6;
-        } else {
-        }
-        Rte_ClearDownStatus(&g_DownContext, ADPT_UDS_STATUS_MASK);
-        necessary_condition_count = 1; //0203检查不通过
-        for (i = 0; i < Security_flash_failure_EE_FLASH_SIZE; i ++) {
-            data = 2;
-            EE_WriteVariable(Security_flash_failure_EE_FLASH_ADDRESS_0 + i, data);
-        }
-    }
-    Rte_ClearAddressInfo(&g_DownContext);   //dct->segIndex = 0;
-    Rte_ClearDownStatus(&g_DownContext, ADPT_SYSTEM_STATUS_MASK);  // & ~0x0c
-    *respSize = 0x01u;
+        Rte_ClearAddressInfo(&g_DownContext);   //dct->segIndex = 0;
+        Rte_ClearDownStatus(&g_DownContext, ADPT_SYSTEM_STATUS_MASK);  // & ~0x0c
+        *respSize = 0x01u;
+    } while (0);
+    
     
     return resCode;
 }
@@ -2092,7 +2113,7 @@ bl_ResponseCode_t Adpt_UdsCallbackEraseMemory(bl_BufferSize_t size,
     (void)size;
     //刷写过程中，下载驱动后，跳过3101FF00xx，请求34服务，ECU肯定响应，期望响应NRC22
     do {
-        if (necessary_condition_count) {
+        if (necessary_condition_count != 6) { //0202未通过
             resCode = DCM_E_CONDITIONSNOTCORRECT;
             break;
         }
@@ -2112,10 +2133,9 @@ bl_ResponseCode_t Adpt_UdsCallbackEraseMemory(bl_BufferSize_t size,
             ret = Adpt_EraseLB(&g_DownContext, address, eraseSize);
             if (BL_ERR_OK == ret) {
                 buffer[0] = 0x4; //例程成功
-                necessary_condition_count = 0;
+                necessary_condition_count = 7; //FF00通过
             } else if (ret == BL_ERR_USER_CODE_01) {
                 resCode = DCM_E_REQUESTOUTOFRANGE; //错误的APP地址，期望ECU响应NRC31；
-                necessary_condition_count = 1; //继续请求34服务，ECU肯定响应，期望响应NRC22
                 break;
             } else {
                 //刷写过程中，请求3101FF00xx（错误的APP地址），ECU响应7101FF0005，期望ECU响应NRC31；
@@ -2153,30 +2173,34 @@ bl_ResponseCode_t Adpt_UdsCallbackCheckSum(bl_BufferSize_t size,
     bl_ResponseCode_t resCode = DCM_E_POSITIVERESPONSE;
     bl_Return_t ret;
     
-    gs_UdsPrivateData.serviceId = ADPT_UDS_31_SERVICE_ID;
-    _Adpt_TimeOutCallBack(ADPT_UDS_31_SERVICE_ID);
-    /* -----------------------------------------------------------------------A12
-    N60和BYD用的flashdriver都一样的，因为从34 01 和34 02的数据看，所以校验和肯定都一样
-    hex文件中，flashdriver的大小为0x5AC
-    ----------------------------------------------------------------------- */
-    ret = Adpt_VerifyData(&g_DownContext, (bl_Size_t)size, buffer); //这里需要改动，因为接口变了。
-    // ret = BL_ERR_NOT_OK;
-    if (BL_ERR_OK == ret) {
-        buffer[0] = 0x4;  //正确
-    } else {
-        //刷写过程中，31010202校验不通过，请求3101FF00xx，ECU响应7101FF0005，期望响应NRC22
-        necessary_condition_count = 1;
-        if (BL_ERR_USER_CODE_01 == ret) {
-            buffer[0] = 0x5;
-        } else if (BL_ERR_USER_CODE_02 == ret) {
-            buffer[0] = 0x6;
-        } else {
+    do {
+        if (necessary_condition_count != 5) { //36下载驱动未通过
+            resCode = DCM_E_CONDITIONSNOTCORRECT;
+            break;
         }
-    }
-    
-    Rte_ClearDownStatus(&g_DownContext, ADPT_UDS_STATUS_MASK); //g_DownContext.status[1]& 0xC7FF FFFF
-    
-    *respSize = 0x01u;
+        gs_UdsPrivateData.serviceId = ADPT_UDS_31_SERVICE_ID;
+        _Adpt_TimeOutCallBack(ADPT_UDS_31_SERVICE_ID);
+        /* -----------------------------------------------------------------------A12
+        N60和BYD用的flashdriver都一样的，因为从34 01 和34 02的数据看，所以校验和肯定都一样
+        hex文件中，flashdriver的大小为0x5AC
+        ----------------------------------------------------------------------- */
+        ret = Adpt_VerifyData(&g_DownContext, (bl_Size_t)size, buffer); //这里需要改动，因为接口变了。
+        // ret = BL_ERR_NOT_OK;
+        if (BL_ERR_OK == ret) {
+            buffer[0] = 0x4;  //正确
+            necessary_condition_count = 6; //0202通过
+        } else {
+            //刷写过程中，31010202校验不通过，请求3101FF00xx，ECU响应7101FF0005，期望响应NRC22
+            if (BL_ERR_USER_CODE_01 == ret) {
+                buffer[0] = 0x5;
+            } else if (BL_ERR_USER_CODE_02 == ret) {
+                buffer[0] = 0x6;
+            } else {
+            }
+        }
+        Rte_ClearDownStatus(&g_DownContext, ADPT_UDS_STATUS_MASK); //g_DownContext.status[1]& 0xC7FF FFFF
+        *respSize = 0x01u;
+    } while (0);
     
     return resCode;
 }
@@ -2206,22 +2230,26 @@ bl_ResponseCode_t Adpt_UdsCallbackCheckCompatibility(bl_BufferSize_t size,
     bl_u32_t data;
     (void)size;
     
-    ret = Adpt_CheckCompatibility();
-    if (BL_ERR_OK == ret) {
-        buffer[0] = 0x4;
-        //每次刷写成功后都将22F1ED数据清0
-        for (i = 0; i < Security_flash_failure_EE_FLASH_SIZE; i ++) {
-            data = 0;
-            EE_WriteVariable(Security_flash_failure_EE_FLASH_ADDRESS_0 + i, data);
+    do {
+        if (necessary_condition_count != 9) { //36下载app未通过
+            resCode = DCM_E_CONDITIONSNOTCORRECT;
+            break;
         }
-    } else {
-        buffer[0] = 0x5;
-    }
-    
-    _Adpt_UdsClearDownInfo(&gs_UdsPrivateData);
-    
-    *respSize = 0x01u;
-    
+        ret = Adpt_CheckCompatibility();
+        if (BL_ERR_OK == ret) {
+            buffer[0] = 0x4;
+            necessary_condition_count = 0; //FF01通过
+            //每次刷写成功后都将22F1ED数据清0
+            for (i = 0; i < Security_flash_failure_EE_FLASH_SIZE; i ++) {
+                data = 0;
+                EE_WriteVariable(Security_flash_failure_EE_FLASH_ADDRESS_0 + i, data);
+            }
+        } else {
+            buffer[0] = 0x5;
+        }
+        _Adpt_UdsClearDownInfo(&gs_UdsPrivateData);
+        *respSize = 0x01u;
+    } while (0);
     return resCode;
 }
 
@@ -2342,7 +2370,7 @@ bl_ResponseCode_t Adpt_UdsCallbackCheckLegitimacy(bl_BufferSize_t size,
 cleanup:
     if (0 == ret) {
         buffer[0] = 0x4;
-        necessary_condition_count++;
+        necessary_condition_count = 1; //6000校验成功后，necessary_condition_count=1
     } else {
         if (1 == ret) {
             buffer[0] = 0x5;
@@ -2372,20 +2400,20 @@ bl_ResponseCode_t Adpt_UdsCallbackCheckVersion(bl_BufferSize_t size,
     (void)size;
     // ret = BL_ERR_NOT_OK;
     do {
-        if (necessary_condition_count) {
+        if (necessary_condition_count != 1) { //若经过6000，necessary_condition_count=1
             resCode = DCM_E_CONDITIONSNOTCORRECT;
             break;
         }
         
         data_F189 = (bl_u8_t *)0x0001BC70;
-        if (0xff == data_F189[0]) { //擦除app，可从boot中读取boot版本号
+        if (0xff == data_F189[0]) {
             data_F189 = (bl_Buffer_t *)0x0000BF60;
         }
         for (i = 0; i < RTE_Manufacturer_ECU_Software_Version_SIZE; i++) {
             if (recv_data_6000[version_start_addr + i] < data_F189[i]) {
                 ret = BL_ERR_NOT_OK;
                 break;
-            } else if (recv_data_6000[version_start_addr + i] >= data_F189[i]) {
+            } else if (recv_data_6000[version_start_addr + i] > data_F189[i]) { //32条修改
                 ret = BL_ERR_OK;
                 break;
             } else {
@@ -2395,9 +2423,9 @@ bl_ResponseCode_t Adpt_UdsCallbackCheckVersion(bl_BufferSize_t size,
         //ret = BL_ERR_OK; //240826 客户沟通，暂时先过
         if (BL_ERR_OK == ret) {
             buffer[0] = 0x4;
+            necessary_condition_count = 2; //6001通过
         } else {
             buffer[0] = 0x5;
-            necessary_condition_count = 1;
         }
         *respSize = 0x01u; //如果是否定响应，不需要返回相应长度
     } while (0);
@@ -2463,10 +2491,6 @@ bl_ResponseCode_t Adpt_UdsCallback34(bl_BufferSize_t size,
     tFlashOptInfo *l_pstFlashOptInfo = (void *)0;
     l_pstFlashOptInfo = (tFlashOptInfo *)flashDriverStartAdd;
     do {
-        if (necessary_condition_count) {
-            resCode = DCM_E_CONDITIONSNOTCORRECT;
-            break;
-        }
         if (g_DownContext.lbId == 0) {
         
             if ((l_pstFlashOptInfo->magic != FLASH_DRIVER_VERSION_MAGIC) || (l_pstFlashOptInfo->version != FLASH_DRIVER_VERSION_VERSION)) {
@@ -2510,6 +2534,10 @@ bl_ResponseCode_t Adpt_UdsCallback34(bl_BufferSize_t size,
             all_sha256_data_length += sha256_block1_length;
             all_sha256_data_length += reqSize;
         } else if (g_DownContext.lbId == 1) { //1代表flash driver
+            if (necessary_condition_count != 4) { //F199未通过 FLASH DRIVER 下载请求条件不通过
+                resCode = DCM_E_CONDITIONSNOTCORRECT;
+                break;
+            }
             all_sha256_data_length = 0xFFFFFFFF;
             sha256_block1_length = 0;
             sha256_block1_length += reqSize;
@@ -2563,7 +2591,7 @@ bl_ResponseCode_t Adpt_UdsCallback34(bl_BufferSize_t size,
  *
  *****************************************************************************/
 /*lint -e{818}*/
-#if 0 //未实现36服务请求长度小于反馈长度
+#if 1 //未实现36服务请求长度小于反馈长度
 bl_ResponseCode_t Adpt_UdsCallback36(bl_BufferSize_t size,
     bl_Buffer_t *buffer,	//這裡的數據，己經去掉了sid 或者 sudid did等
     bl_BufferSize_t *respSize) {
@@ -2619,7 +2647,7 @@ bl_ResponseCode_t Adpt_UdsCallback36(bl_BufferSize_t size,
                 resCode = DCM_E_WRONGBLOCKSEQUENCECOUNTER;
             } else {
                 /*repeat request*/
-                resCode = DCM_E_POSITIVERESPONSE;
+                resCode = DCM_E_WRONGBLOCKSEQUENCECOUNTER;
             }
             break;
         }
@@ -2665,12 +2693,17 @@ bl_ResponseCode_t Adpt_UdsCallback36(bl_BufferSize_t size,
     
     if (resCode != DCM_E_POSITIVERESPONSE) {
         _Adpt_UdsClearDownInfo(&gs_UdsPrivateData);
+    } else {
+        if (g_DownContext.lbId == 0) {
+            necessary_condition_count = 8; //36下载app通过
+        } else if (g_DownContext.lbId == 1) {
+            necessary_condition_count = 5; //36下载驱动通过
+        }
     }
-    
     return resCode;
 }
 #endif
-
+#if 0 //36服务任意长度已实现
 bl_ResponseCode_t Adpt_UdsCallback36(bl_BufferSize_t size,
     bl_Buffer_t *buffer,	//這裡的數據，己經去掉了sid 或者 sudid did等
     bl_BufferSize_t *respSize) {
@@ -2815,7 +2848,7 @@ bl_ResponseCode_t Adpt_UdsCallback36(bl_BufferSize_t size,
     
     return resCode;
 }
-
+#endif
 /**************************************************************************//**
  *
  *  \details Callback of requesting transfer exit.
