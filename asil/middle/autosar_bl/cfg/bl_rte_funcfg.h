@@ -83,7 +83,7 @@
 #define RTE_ECU_HW_NUMBER_SIZE             (10UL)   
 #define RTE_BOOT_SW_ID_SIZE                (10UL) 
 #define RTE_PORT_NUMBER_SIZE               (12UL)  
-#define RTE_SUPPLIER_CODE_SIZE             (3UL)  
+#define RTE_SUPPLIER_CODE_SIZE             (6UL)  
 #define RTE_ECU_SW_NUMBER_SIZE             (10UL)  
 #define RTE_PARTS_ASSEMBLY_NUMBER_SIZE     (7UL)
 #define RTE_Diagnosis_Specification_Version_SIZE     (4UL) //FF00

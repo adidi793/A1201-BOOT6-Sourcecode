@@ -36,6 +36,9 @@ VIN码 A12项目为17个字节
 #define VIN_BYTE8_11_EE_FLASH_ADDRESS  2u
 #define VIN_BYTE12_15_EE_FLASH_ADDRESS 3u
 #define VIN_BYTE16_19_EE_FLASH_ADDRESS 4u
+
+#define VIN_EE_FLASH_ADDRESS_0   0
+#define VIN_EE_FLASH_SIZE  5
 /* -----------------------------------------------------------------------A12
 金手指 A12项目为16个字节
 ----------------------------------------------------------------------- */

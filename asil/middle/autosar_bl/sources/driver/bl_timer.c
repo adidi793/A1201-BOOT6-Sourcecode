@@ -91,7 +91,7 @@ static u32 g_time_tick_seed = 0;
 void Tim_Init(void)
 {
     g_time_tick = 0;
-    //systick_init();  //
+    // systick_init();  //
     // app_tim_init();  /
     tim_init();
     BSTIM16_Init();

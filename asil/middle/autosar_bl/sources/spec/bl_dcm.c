@@ -532,15 +532,15 @@ static void _Dcm_MainFunction(void) {
     bl_Return_t ret;
     bl_u16_t id = 0;
     bl_BufferSize_t size;
-    bl_BufferSize_t respSize = 0; 
+    bl_BufferSize_t respSize = 0;
     bl_BufferSize_t sumSize = 0;  //从buffer已读的数据字节长度
     bl_BufferSize_t recvSize = g_DcmBuffer.recvSize; //接收数据段长度(从SID开始计算，PCI后面的部分)
     bl_Buffer_t *buffer = g_DcmBuffer.buffer;
     bl_ResponseCode_t resCode = DCM_E_POSITIVERESPONSE;
-
+    
     const bl_DcmServiceHeader_t *header; //type，resCode，sessionResCode，*MakeId
     const bl_DcmService_t *list = &g_DcmServiceList;
-
+    
     do {
         /* -----------------------------------------------------------------------A12
         1. header = &g_DcmServiceHeader（第一次），
@@ -582,7 +582,7 @@ static void _Dcm_MainFunction(void) {
         ----------------------------------------------------------------------- */
         ret = _Dcm_CheckRequestFlag(list->flag);
         if (ret != BL_ERR_OK) {
-            resCode = header->resCode;
+            resCode = header->resCode; //
             break;
         }
         /* -----------------------------------------------------------------------A12
@@ -794,7 +794,7 @@ static void _Dcm_NegResponse(bl_ResponseCode_t resCode,
     if ((BL_ERR_OK != ret)
         || ((DCM_E_SERVICENOTSUPPORTED != resCode)
             && (DCM_E_SUBFUNCTIONNOTSUPPORTED != resCode)
-            && (DCM_E_REQUESTOUTOFRANGE != resCode) 
+            && (DCM_E_REQUESTOUTOFRANGE != resCode)
             && (DCM_E_SERVICENOTSUPPORTEDINACTIVESESSION != resCode)
             && (DCM_E_SUBFUNCTIONNOTSUPPORTEDINACTIVESESSION != resCode))) {
         dcmBuffer->tranSize = size;
