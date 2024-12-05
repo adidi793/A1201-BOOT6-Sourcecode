@@ -3275,6 +3275,9 @@ static void _Adpt_UdsGotoSession(bl_DownStatus_t sessionMask) {
     Rte_SetMutexDownStatus(&g_DownContext,
         DCM_STATUS_SECURITY_LOCK_1,  //40000100
         DCM_SECURITYACCESS_1_MASK);  //40000700  相當於清除其余兩個 再置 DCM_STATUS_SECURITY_LOCK_1
+    Rte_SetMutexDownStatus(&g_DownContext,
+        DCM_STATUS_SECURITY_LOCK_2,
+        DCM_SECURITYACCESS_2_MASK);
     #else
     /*unlock the level 1.*/
     Rte_SetMutexDownStatus(&g_DownContext,

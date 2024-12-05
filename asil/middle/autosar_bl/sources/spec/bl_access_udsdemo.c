@@ -137,13 +137,11 @@ void Acc_UdsDemoInit(void) {
     return ;
 }
 
-/**************************************************************************//**
- *
- *  \details Make a new seed.
- *
- *  \since  V5.0.0
- *
- *****************************************************************************/
+/* -----------------------------------------------------------------------A12
+重新上下电后请求种子，Boot下种子值一直同一个，未随机，APP下无此问题
+由于是靠时间获取种子值，而测试时上电到获取种子时间固定。
+----------------------------------------------------------------------- */
+#if 0
 void Acc_UdsDemoMakeNewSeed(void) {
     /* A12 初始key 0x5597 9DBE */
     bl_u32_t currenttick;
@@ -151,7 +149,12 @@ void Acc_UdsDemoMakeNewSeed(void) {
     currenttick = currenttick % 1000;
     /*当前时间 ×16807，得到新的随机数seed*/
     gs_UdsDemoSeed = gs_UdsDemoSeed * ACC_UDSDEMO_RANDOM_SEED * currenttick;
-    
+    return ;
+}
+#endif
+
+void Acc_UdsDemoMakeNewSeed(void) {
+    gs_UdsDemoSeed = GetRandomNumber();
     return ;
 }
 

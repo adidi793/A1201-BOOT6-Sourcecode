@@ -51,7 +51,7 @@
 #include "svd.h"
 #include "svd_interrupt.h"
 //#include "system_ac780x.h"
-
+#include "rng.h"
 
 
 #ifdef FALSH_DRIVER_INIT_EN
@@ -245,8 +245,7 @@ void Rte_PreInit(void) {
     FL_RMU_BOR_SetThreshold(RMU, FL_RMU_BOR_THRESHOLD_2P40V);
     FL_RMU_BOR_Enable(RMU);                                                         //////bor fun
     Sys_InitClock();
-    
-    
+    RNG_Init();    
     #if (RTE_FUN_STAY_IN_BOOT == BL_FUN_ON)
     _Rte_InitStayInBoot();           // gs_StayInBootResetCount =20s  //gs_StayInBootResetFlag
     (void)g_RteInfo.comOps->Init();  //can 初始化  Canif_Init
@@ -536,8 +535,9 @@ void Rte_SetDownStatus(bl_DownContext_t *dct, bl_DownStatus_t mask) {
  *
  *****************************************************************************/
 /* -----------------------------------------------------------------------A12
-mask = 40000100
+set mutex download status in the dct.
 mutex 互斥
+传入mask的数只能有一个位置1；否则无法设置状态
 ----------------------------------------------------------------------- */
 void Rte_SetMutexDownStatus(bl_DownContext_t *dct,
     bl_DownStatus_t mask,
