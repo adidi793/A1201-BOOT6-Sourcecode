@@ -81,7 +81,7 @@ __root uint8_t u8ReprogramFlag[16] __attribute__((section(".ReprogramFlag")));
 /*boot中定义F189，需要和app中一致，目的是为了在app不可用时，仍然能读取*/
 __root const uint8_t system_supplier_ECU_hardware_Version_F150[16]@0x0000BF40 = {'0', '.', '0', '0', '.', '0', '1', 0x00, 0x00, 0x00,};
 __root const uint8_t system_name_F197[16]@0x0000BF50 = {'L', 'P', '-', 'S', 'W', 'B', '0', '8',  '0',  '-', 'A', 'A', 0x00, 0x00, 0x00, 0x00,};
-__root const uint8_t Manufacturer_ECU_Software_Version_F189[10]@0x0000BF60 = {'0', '.', '0', '0', '.', '0', '6', 0x00, 0x00, 0x00,};
+__root const uint8_t Manufacturer_ECU_Software_Version_F189[10]@0x0000BF60 = {'0', '.', '0', '0', '.', '0', '5', 0x00, 0x00, 0x00,};
 __root const bl_u8_t     Manufacturer_ECU_Hardware_Number_F191[32]@0x0000BF70 = {'F', 'M', '3', '3', 'L', 'G', '0', '2', 'A', 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 __root const bl_u8_t     Manufacturer_ECU_Software_Number_F188[32]@0x0000BF90 = {'L', 'P', 'A', '1', '2', '0', 'S', 'W', 'N', '7', 'B', 'P', '0', '1', 'S', 'W', 'B', 0x00, 0x00,};
 __root const bl_u8_t     Manufacturer_Spare_Part_Number_F187[32]@0x0000BFB0 = {'5', '7', '1', '0', '1', '0', '0', '-', 'A', 'G', 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,};
@@ -2419,6 +2419,9 @@ bl_ResponseCode_t Adpt_UdsCallbackCheckVersion(bl_BufferSize_t size,
             } else {
             }
         }
+        if (i == RTE_Manufacturer_ECU_Software_Version_SIZE) {
+            ret = BL_ERR_OK;
+        }
         
         //ret = BL_ERR_OK; //240826 客户沟通，暂时先过
         if (BL_ERR_OK == ret) {
@@ -2518,6 +2521,7 @@ bl_ResponseCode_t Adpt_UdsCallback34(bl_BufferSize_t size,
         addr = BL_BE32_TO_MCU(&buffer[ADPT_UDS_34_SERVICE_ADDRESS_POS]);
         reqSize = BL_BE32_TO_MCU(&buffer[ADPT_UDS_34_SERVICE_SIZE_POS]);  /*PRQA S 1840*/
         ret = Adpt_ActivateDownload(&g_DownContext, addr, reqSize); //g_DownContext.ID会更新
+        //刷写过程中，请求34服务下载错误的驱动地址，，ECU响应NRC10，期望响应NRC31
         if (ret != BL_ERR_OK) {
             resCode = DCM_E_REQUESTOUTOFRANGE;
             break;
@@ -2647,6 +2651,7 @@ bl_ResponseCode_t Adpt_UdsCallback36(bl_BufferSize_t size,
                 resCode = DCM_E_WRONGBLOCKSEQUENCECOUNTER;
             } else {
                 /*repeat request*/
+                //刷写过程中，进行36传输数据时，重复发送同一个块序号，第二个3601xx，ECU响应76，期望响应NRC73，不允许刷写成功
                 resCode = DCM_E_WRONGBLOCKSEQUENCECOUNTER;
             }
             break;
