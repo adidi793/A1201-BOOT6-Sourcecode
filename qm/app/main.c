@@ -58,7 +58,7 @@ int main(void) {
     #ifdef FLASH_TEST_ERASE_WRITE
     flash_if_test();
     #endif
-    boot_app_init();
+    boot_app_init(); 
     /* -----------------------------------------------------------------------A12
     先检查重编程是否有效，返回 BOOTING_FLAG_REPROGRAM_VALID
     再检查APP是否有效，返回 BOOTING_FLAG_APPLICATION_VALID
