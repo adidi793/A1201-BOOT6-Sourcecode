@@ -2117,15 +2117,12 @@ bl_ResponseCode_t Adpt_UdsCallbackEraseMemory(bl_BufferSize_t size,
             resCode = DCM_E_CONDITIONSNOTCORRECT;
             break;
         }
-        /* -----------------------------------------------------------------------A12
-        检查地址和长度格式标识符是否为0x44
-        address=0x8100，eraseSize=0x013F00
-        ----------------------------------------------------------------------- */
+        //检查地址和长度格式标识符是否为0x44，31 01 FF 00 44中的44为可选参数，零跑有要求，JAC和GEELY无要求
         if ((bl_Buffer_t)ADPT_MEMORY_LENANDADDR_FORMAT == buffer[ADPT_UDS_ERASE_MEMORY_FORMAT_POS]) {
-            address = BL_BE32_TO_MCU(&buffer[ADPT_UDS_ERASE_MEMORY_ADDRESS_POS]);
-            eraseSize = BL_BE32_TO_MCU(&buffer[ADPT_UDS_ERASE_MEMORY_SIZE_POS]);
+            address = BL_BE32_TO_MCU(&buffer[ADPT_UDS_ERASE_MEMORY_ADDRESS_POS]); //0x0000C100
+            eraseSize = BL_BE32_TO_MCU(&buffer[ADPT_UDS_ERASE_MEMORY_SIZE_POS]); //0x0000FF00
             
-            gs_UdsPrivateData.serviceId = ADPT_UDS_31_SERVICE_ID;
+            gs_UdsPrivateData.serviceId = ADPT_UDS_31_SERVICE_ID; //有什么作用吗
             _Adpt_TimeOutCallBack(ADPT_UDS_31_SERVICE_ID);       //请求未决定
             /* -----------------------------------------------------------------------A12
             检查地址和长度格式标识符是否为0x44
@@ -2708,7 +2705,7 @@ bl_ResponseCode_t Adpt_UdsCallback36(bl_BufferSize_t size,
     return resCode;
 }
 #endif
-#if 0 //36服务任意长度已实现
+#if 0 //36服务任意长度已实现,经测试下载app时，回复0x72
 bl_ResponseCode_t Adpt_UdsCallback36(bl_BufferSize_t size,
     bl_Buffer_t *buffer,	//這裡的數據，己經去掉了sid 或者 sudid did等
     bl_BufferSize_t *respSize) {
@@ -2849,6 +2846,12 @@ bl_ResponseCode_t Adpt_UdsCallback36(bl_BufferSize_t size,
     
     if (resCode != DCM_E_POSITIVERESPONSE) {
         _Adpt_UdsClearDownInfo(&gs_UdsPrivateData);
+    } else {
+        if (g_DownContext.lbId == 0) {
+            necessary_condition_count = 8; //36下载app通过
+        } else if (g_DownContext.lbId == 1) {
+            necessary_condition_count = 5; //36下载驱动通过
+        }
     }
     
     return resCode;
@@ -2878,16 +2881,25 @@ bl_ResponseCode_t Adpt_UdsCallback37(bl_BufferSize_t size,
     
     (void)buffer;
     (void)size;
+    do {
+        ret = Rte_IsValidStatus(&g_DownContext, ADPT_STATUS_ALLOW_TRANS_DATA);
+        if (BL_ERR_OK != ret) {
+            _Adpt_UdsClearDownInfo(&gs_UdsPrivateData);
+            resCode = DCM_E_REQUESTSEQUENCEERROR;
+            break;
+        } else {
+            ret = Rte_IsValidStatus(&g_DownContext, ADPT_STATUS_SEGMENT_FIRST_DATA);
+            if (BL_ERR_OK != ret) {
+                _Adpt_UdsClearDownInfo(&gs_UdsPrivateData);
+                resCode = DCM_E_REQUESTSEQUENCEERROR;
+                break;
+            } else {
+                Rte_ClearDownStatus(&g_DownContext, (ADPT_STATUS_SEGMENT_FIRST_DATA | ADPT_STATUS_ALLOW_TRANS_DATA));
+                *respSize = 0x00u;
+            }
+        }
+    } while (0);
     
-    ret = Rte_IsValidStatus(&g_DownContext, (ADPT_STATUS_SEGMENT_FIRST_DATA | ADPT_STATUS_ALLOW_TRANS_DATA));
-    if (BL_ERR_OK != ret) {
-        _Adpt_UdsClearDownInfo(&gs_UdsPrivateData);
-        
-        resCode = DCM_E_REQUESTSEQUENCEERROR;
-    } else {
-        Rte_ClearDownStatus(&g_DownContext, (ADPT_STATUS_SEGMENT_FIRST_DATA | ADPT_STATUS_ALLOW_TRANS_DATA));
-        *respSize = 0x00u;
-    }
     #ifdef UDS_DEBUG_EN
     g_usd_test.data[1]++;
     #endif

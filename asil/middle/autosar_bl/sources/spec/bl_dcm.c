@@ -534,7 +534,7 @@ static void _Dcm_MainFunction(void) {
     bl_BufferSize_t size;
     bl_BufferSize_t respSize = 0;
     bl_BufferSize_t sumSize = 0;  //从buffer已读的数据字节长度
-    bl_BufferSize_t recvSize = g_DcmBuffer.recvSize; //接收数据段长度(从SID开始计算，PCI后面的部分)
+    bl_BufferSize_t recvSize = g_DcmBuffer.recvSize; //接收数据段长度(从SID开始计算，PCI中的data_length的值)
     bl_Buffer_t *buffer = g_DcmBuffer.buffer;
     bl_ResponseCode_t resCode = DCM_E_POSITIVERESPONSE;
     
@@ -545,13 +545,13 @@ static void _Dcm_MainFunction(void) {
         /* -----------------------------------------------------------------------A12
         1. header = &g_DcmServiceHeader（第一次），
         2. &g_DcmSubIdHeader或g_DcmDidHeader（第二次）
-        3. 子功能有DID的情况下，g_DcmDidHeader
+        3. DID的情况下，g_DcmDidHeader
         ----------------------------------------------------------------------- */
         header = list->header;
         /* -----------------------------------------------------------------------A12
         1. sumSize=0,MakeId = _Dcm_MakeSid → id=sid,size=1.sumSize=1,从buffer[0]获取SID,
-        2. sumSize=1,MakeId = _Dcm_MakeSubId 或 _Dcm_MakeDid → id=sid,size=1或2，sumSize=2或3,
-        从buffer[1]或buffer[1-2]获取subid或did
+        2. sumSize=1,MakeId = _Dcm_MakeSubId → id=subid,size=1，sumSize=2，从buffer[1]获取subid
+        或 MakeId = _Dcm_MakeDid → id=sid,size=1或2，sumSize=2或3,从buffer[1]或buffer[1-2]获取subid或did
         3. sumSize=2,MakeId = _Dcm_MakeDid → id=DID,size=2，sumSize=4,从buffer[3-4]获取DID
         ----------------------------------------------------------------------- */
         size = header->MakeId(&buffer[sumSize], &id);
